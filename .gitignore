@@ -1,0 +1,9 @@
+.DS_Store
+*.log
+node_modules
+package-lock.json
+test.js
+.idea/
+dist/
+bun.lock
+.claude/
