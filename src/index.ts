@@ -77,6 +77,8 @@ function getAsyncString(
   });
 }
 
+function generate(options: GenerateOptions | number | null | undefined, cb: GenerateCallback): void;
+function generate(options?: GenerateOptions | number | null): string;
 function generate(options?: GenerateOptions | number | null, cb?: GenerateCallback): string | void {
   const charset = new Charset();
 

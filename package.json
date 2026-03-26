@@ -1,6 +1,6 @@
 {
   "name": "@huongda-group/random-string",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Nelie Taylor <nghi@huongda.com> (https://n96.dev)",
   "description": "A module for generating random strings",
   "homepage": "https://github.com/huongda-group/node-random-string",
