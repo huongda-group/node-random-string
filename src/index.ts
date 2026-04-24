@@ -46,10 +46,23 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
-  for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
-    if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+  const charsLen = chars.length;
+
+  // Node.js Buffer and Uint8Array support fast direct indexing.
+  // UnsafeBuffer is a custom interface that only guarantees readUInt8.
+  if (typeof (buf as any).readUInt8 === 'function' && !(buf instanceof Uint8Array)) {
+    for (let i = 0; i < buf.length && string.length < reqLen; i++) {
+      const randomByte = buf.readUInt8(i);
+      if (randomByte < maxByte) {
+        string += chars[randomByte % charsLen];
+      }
+    }
+  } else {
+    for (let i = 0; i < buf.length && string.length < reqLen; i++) {
+      const randomByte = (buf as Buffer)[i];
+      if (randomByte < maxByte) {
+        string += chars[randomByte % charsLen];
+      }
     }
   }
   return string;
