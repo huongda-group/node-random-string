@@ -1,0 +1,5 @@
+## 2024-04-26 - String and Array Micro-optimizations
+
+**Learning:** Replaced `[...new Set(string.split(''))].join('')` with a simple loop using `result.indexOf(char) === -1` for string deduplication. The Set/Split approach created massive object allocation overhead and was ~30-50% slower for the small typical lengths used in charsets compared to `indexOf`. Also found that method calls like `buf.readUInt8(i)` and `chars.charAt()` in tight string generation loops add noticeable overhead compared to direct indexer access `buf[i]` and `chars[i]`. Using a native `Uint8Array` instead of pushing to standard `Array` or creating custom wrapper classes in `unsafeRandomBytes` drastically reduced allocation overhead and sped up the generation hot path.
+
+**Action:** For string deduplication under ~100 characters, avoid splitting and spreading sets. In tight loops (like pseudo-random string generators), favor bracket indexer access `[]` over method calls for Strings and Buffers, and always instantiate native TypedArrays over standard Arrays or custom container classes when generating buffers.
