@@ -46,12 +46,27 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
-  for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
-    if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+  const charsLen = chars.length;
+  // @ts-ignore - Direct index access is faster than readUInt8 but only available on Buffer
+  const isBuffer = buf[0] !== undefined;
+
+  if (isBuffer) {
+    for (let i = 0; i < buf.length && string.length < reqLen; i++) {
+      // @ts-ignore
+      const randomByte = buf[i];
+      if (randomByte < maxByte) {
+        string += chars[randomByte % charsLen];
+      }
+    }
+  } else {
+    for (let i = 0; i < buf.length && string.length < reqLen; i++) {
+      const randomByte = buf.readUInt8(i);
+      if (randomByte < maxByte) {
+        string += chars[randomByte % charsLen];
+      }
     }
   }
+
   return string;
 }
 
