@@ -13,6 +13,7 @@ type GenerateCallback = (err: Error | null, result?: string) => void;
 interface UnsafeBuffer {
   length: number;
   readUInt8(index: number): number;
+  [index: number]: number | undefined;
 }
 
 function unsafeRandomBytes(length: number): UnsafeBuffer {
@@ -46,10 +47,26 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
-  for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
-    if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+  // Cache chars.length to avoid repeated property lookups in the loop.
+  const charsLen = chars.length;
+  // Check if buffer supports array-like indexing for faster access.
+  const hasIndexer = buf[0] !== undefined;
+
+  if (hasIndexer) {
+    for (let i = 0; i < buf.length && string.length < reqLen; i++) {
+      // Direct array indexing (buf[i]) and string indexing (chars[...]) are noticeably faster than
+      // buf.readUInt8(i) and chars.charAt(...) in hot paths.
+      const randomByte = buf[i]!;
+      if (randomByte < maxByte) {
+        string += chars[randomByte % charsLen];
+      }
+    }
+  } else {
+    for (let i = 0; i < buf.length && string.length < reqLen; i++) {
+      const randomByte = buf.readUInt8(i);
+      if (randomByte < maxByte) {
+        string += chars[randomByte % charsLen];
+      }
     }
   }
   return string;
