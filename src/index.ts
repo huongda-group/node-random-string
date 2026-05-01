@@ -29,9 +29,24 @@ function unsafeRandomBytes(length: number): UnsafeBuffer {
   };
 }
 
+// Pre-allocate a large pool of random bytes to significantly reduce
+// the overhead of calling the underlying crypto API for small chunks.
+const POOL_SIZE = 8192;
+let pool: Buffer | undefined;
+let poolOffset = 0;
+
 function safeRandomBytes(length: number): Buffer | UnsafeBuffer {
   try {
-    return randomBytes(length);
+    if (length > POOL_SIZE) {
+      return randomBytes(length);
+    }
+    if (!pool || poolOffset + length > pool.length) {
+      pool = randomBytes(POOL_SIZE);
+      poolOffset = 0;
+    }
+    const result = pool.subarray(poolOffset, poolOffset + length);
+    poolOffset += length;
+    return result;
   } catch (e) {
     /* React/React Native Fix + Eternal loop removed */
     return unsafeRandomBytes(length);
