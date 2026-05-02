@@ -63,7 +63,14 @@ export class Charset {
   }
 
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    // ⚡ Bolt: Fast string deduplication avoiding Array/Set allocations
+    // Replaces: [...new Set(this.chars.split(''))].join('')
+    let result = '';
+    for (let i = 0; i < this.chars.length; i++) {
+      if (result.indexOf(this.chars[i]) === -1) {
+        result += this.chars[i];
+      }
+    }
+    this.chars = result;
   }
 }

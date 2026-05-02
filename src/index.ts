@@ -46,10 +46,15 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
+  // ⚡ Bolt: Cache chars.length to avoid repeated property access in hot loop
+  const charsLen = chars.length;
+  // ⚡ Bolt: Check Buffer.isBuffer to use fast indexing instead of slower buf.readUInt8
+  const isBuffer = Buffer.isBuffer(buf);
   for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
+    const randomByte = isBuffer ? buf[i] : buf.readUInt8(i);
     if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+      // ⚡ Bolt: Use fast string indexing instead of charAt
+      string += chars[randomByte % charsLen];
     }
   }
   return string;
