@@ -1,3 +1,10 @@
+const numbers = '0123456789';
+const charsLower = 'abcdefghijklmnopqrstuvwxyz';
+const charsUpper = charsLower.toUpperCase();
+const hexChars = 'abcdef';
+const binaryChars = '01';
+const octalChars = '01234567';
+
 export type CharsetType =
   | 'alphanumeric'
   | 'numeric'
@@ -25,13 +32,6 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
     if (type === 'alphanumeric') {
       return numbers + charsLower + charsUpper;
     } else if (type === 'numeric') {
@@ -49,9 +49,9 @@ export class Charset {
     }
   }
 
+  // Reuse inline regex instead of object allocation
   removeUnreadable(): void {
-    const unreadableChars = /[0OIl]/g;
-    this.chars = this.chars.replace(unreadableChars, '');
+    this.chars = this.chars.replace(/[0OIl]/g, '');
   }
 
   setcapitalization(capitalization: string): void {
@@ -62,8 +62,14 @@ export class Charset {
     }
   }
 
+  // Optimized to avoid unnecessary array allocations and Sets
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    let result = '';
+    for (let i = 0; i < this.chars.length; i++) {
+      if (result.indexOf(this.chars[i]) === -1) {
+        result += this.chars[i];
+      }
+    }
+    this.chars = result;
   }
 }

@@ -46,10 +46,13 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
-  for (let i = 0; i < buf.length && string.length < reqLen; i++) {
+  const charsLen = chars.length;
+  // Cache buffer limits to avoid property accesses in tight loop
+  const bufLen = buf.length;
+  for (let i = 0; i < bufLen && string.length < reqLen; i++) {
     const randomByte = buf.readUInt8(i);
     if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+      string += chars[randomByte % charsLen];
     }
   }
   return string;
