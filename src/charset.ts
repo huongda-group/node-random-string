@@ -63,7 +63,15 @@ export class Charset {
   }
 
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    // ⚡ Bolt Optimization: Using a primitive for-loop with indexOf instead of
+    // .split(''), new Set(), and .join('') avoids heavy object and array allocation
+    // overhead for short strings, making option processing significantly faster.
+    let uniqueChars = '';
+    for (let i = 0; i < this.chars.length; i++) {
+      if (uniqueChars.indexOf(this.chars[i]) === -1) {
+        uniqueChars += this.chars[i];
+      }
+    }
+    this.chars = uniqueChars;
   }
 }
