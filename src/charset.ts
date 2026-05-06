@@ -7,6 +7,21 @@ export type CharsetType =
   | 'octal'
   | (string & {});
 
+const numbers = '0123456789';
+const charsLower = 'abcdefghijklmnopqrstuvwxyz';
+const charsUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const hexChars = 'abcdef';
+const binaryChars = '01';
+const octalChars = '01234567';
+
+const CHARSETS: Record<string, string> = Object.create(null);
+CHARSETS.alphanumeric = numbers + charsLower + charsUpper;
+CHARSETS.numeric = numbers;
+CHARSETS.alphabetic = charsLower + charsUpper;
+CHARSETS.hex = numbers + hexChars;
+CHARSETS.binary = binaryChars;
+CHARSETS.octal = octalChars;
+
 export class Charset {
   chars: string;
 
@@ -25,28 +40,7 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
-    }
+    return CHARSETS[type as string] || type;
   }
 
   removeUnreadable(): void {
@@ -63,7 +57,14 @@ export class Charset {
   }
 
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    let result = '';
+    // Use O(N^2) indexOf loop instead of O(N) Set/Array mapping because
+    // it avoids heavy memory allocation and is faster for short charset strings.
+    for (let i = 0; i < this.chars.length; i++) {
+      if (result.indexOf(this.chars[i]) === -1) {
+        result += this.chars[i];
+      }
+    }
+    this.chars = result;
   }
 }
