@@ -1,0 +1,3 @@
+## 2024-05-06 - Charset Lookup and Loop Cache Overheads
+**Learning:** In highly called string generation routines, inline dictionary lookups (`CHARSETS[type]`) are slightly faster than long if/else chains. Also, avoiding `Array.from(new Set(chars))` in favor of a basic string `indexOf` loop significantly reduces memory allocations and speed up processing of short strings. Inside `processString`, caching `buf.length` and `chars.length` provides a measurable albeit smaller speedup.
+**Action:** Use dictionary mappings for simple enum-like lookups instead of branching logic in hot paths. Avoid Set/Array allocations when deduplicating small collections (like alphabets) in favor of basic iteration structures. Always cache array/buffer/string lengths in tight `for` loops.
