@@ -7,6 +7,23 @@ export type CharsetType =
   | 'octal'
   | (string & {});
 
+// ⚡ Bolt Optimization: Precompute strings at module level to avoid allocating them repeatedly
+const numbers = '0123456789';
+const charsLower = 'abcdefghijklmnopqrstuvwxyz';
+const charsUpper = charsLower.toUpperCase();
+const hexChars = 'abcdef';
+const binaryChars = '01';
+const octalChars = '01234567';
+
+// ⚡ Bolt Optimization: Use dictionary mapping for O(1) string lookup and to avoid if/else chains
+const CHAR_MAPPINGS: Record<string, string> = Object.create(null);
+CHAR_MAPPINGS['alphanumeric'] = numbers + charsLower + charsUpper;
+CHAR_MAPPINGS['numeric'] = numbers;
+CHAR_MAPPINGS['alphabetic'] = charsLower + charsUpper;
+CHAR_MAPPINGS['hex'] = numbers + hexChars;
+CHAR_MAPPINGS['binary'] = binaryChars;
+CHAR_MAPPINGS['octal'] = octalChars;
+
 export class Charset {
   chars: string;
 
@@ -25,28 +42,7 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
-    }
+    return CHAR_MAPPINGS[type as string] || type;
   }
 
   removeUnreadable(): void {
@@ -63,7 +59,14 @@ export class Charset {
   }
 
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    // ⚡ Bolt Optimization: Avoid high overhead of split(), Set(), and join() by building new string
+    let newChars = '';
+    const charsLen = this.chars.length;
+    for (let i = 0; i < charsLen; i++) {
+      if (newChars.indexOf(this.chars[i]) === -1) {
+        newChars += this.chars[i];
+      }
+    }
+    this.chars = newChars;
   }
 }

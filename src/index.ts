@@ -16,9 +16,10 @@ interface UnsafeBuffer {
 }
 
 function unsafeRandomBytes(length: number): UnsafeBuffer {
-  const stack: number[] = [];
+  // ⚡ Bolt Optimization: Use pre-allocated Uint8Array instead of dynamically resizing array
+  const stack = new Uint8Array(length);
   for (let i = 0; i < length; i++) {
-    stack.push(Math.floor(Math.random() * 255));
+    stack[i] = Math.floor(Math.random() * 255);
   }
 
   return {
@@ -46,10 +47,13 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
+  // ⚡ Bolt Optimization: Cache chars.length to avoid property access overhead in tight loop
+  const charsLen = chars.length;
   for (let i = 0; i < buf.length && string.length < reqLen; i++) {
     const randomByte = buf.readUInt8(i);
     if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+      // ⚡ Bolt Optimization: Use bracket notation instead of charAt for better V8 string generation performance
+      string += chars[randomByte % charsLen];
     }
   }
   return string;
