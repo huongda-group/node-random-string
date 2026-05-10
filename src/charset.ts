@@ -1,3 +1,14 @@
+// ⚡ Bolt Optimization: Use a null-prototype dictionary for fast O(1) charset lookup.
+// This avoids repeated if/else string concatenation logic per character lookup.
+const CHARSET_DICT: Record<string, string> = Object.assign(Object.create(null), {
+  alphanumeric: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  numeric: '0123456789',
+  alphabetic: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  hex: '0123456789abcdef',
+  binary: '01',
+  octal: '01234567'
+});
+
 export type CharsetType =
   | 'alphanumeric'
   | 'numeric'
@@ -25,28 +36,10 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
+    if (typeof type === 'string' && CHARSET_DICT[type] !== undefined) {
+      return CHARSET_DICT[type];
     }
+    return type as string;
   }
 
   removeUnreadable(): void {
@@ -63,7 +56,14 @@ export class Charset {
   }
 
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    // ⚡ Bolt Optimization: For short strings, a simple loop with indexOf avoids
+    // the heavy allocation overhead of converting the string to an array and then a Set.
+    let result = '';
+    for (let i = 0; i < this.chars.length; i++) {
+      if (result.indexOf(this.chars[i]) === -1) {
+        result += this.chars[i];
+      }
+    }
+    this.chars = result;
   }
 }
