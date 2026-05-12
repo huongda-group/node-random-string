@@ -7,6 +7,20 @@ export type CharsetType =
   | 'octal'
   | (string & {});
 
+const NUMBERS = '0123456789';
+const CHARS_LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const CHARS_UPPER = CHARS_LOWER.toUpperCase();
+const HEX_CHARS = 'abcdef';
+
+// PERF: use dictionary lookup to avoid repeated allocations and if/else chain
+const CHARSET_DICT: Record<string, string> = Object.create(null);
+CHARSET_DICT['alphanumeric'] = NUMBERS + CHARS_LOWER + CHARS_UPPER;
+CHARSET_DICT['numeric'] = NUMBERS;
+CHARSET_DICT['alphabetic'] = CHARS_LOWER + CHARS_UPPER;
+CHARSET_DICT['hex'] = NUMBERS + HEX_CHARS;
+CHARSET_DICT['binary'] = '01';
+CHARSET_DICT['octal'] = '01234567';
+
 export class Charset {
   chars: string;
 
@@ -25,28 +39,7 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
-    }
+    return CHARSET_DICT[type as string] || (type as string);
   }
 
   removeUnreadable(): void {
@@ -63,7 +56,15 @@ export class Charset {
   }
 
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    // PERF: fast string deduplication avoiding array allocations
+    let newChars = '';
+    const len = this.chars.length;
+    for (let i = 0; i < len; i++) {
+      const char = this.chars[i];
+      if (newChars.indexOf(char) === -1) {
+        newChars += char;
+      }
+    }
+    this.chars = newChars;
   }
 }
