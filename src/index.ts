@@ -13,12 +13,15 @@ type GenerateCallback = (err: Error | null, result?: string) => void;
 interface UnsafeBuffer {
   length: number;
   readUInt8(index: number): number;
+  [index: number]: number; // Add index signature for compatibility if needed, but not strictly required
 }
 
 function unsafeRandomBytes(length: number): UnsafeBuffer {
-  const stack: number[] = [];
+  // Performance optimization: Pre-allocate Array instead of dynamically sizing array
+  // to eliminate array resizing allocation overhead, keeping type compatibility.
+  const stack = new Array(length);
   for (let i = 0; i < length; i++) {
-    stack.push(Math.floor(Math.random() * 255));
+    stack[i] = Math.floor(Math.random() * 255);
   }
 
   return {
@@ -46,10 +49,26 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
-  for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
-    if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+  const charsLen = chars.length; // Performance optimization: Cache lengths
+  const bufLen = buf.length;
+
+  // Performance optimization: Fast path for Buffer (Node.js) which provides standard array-like access,
+  // avoiding function call overhead of readUInt8
+  if (typeof Buffer !== 'undefined' && Buffer.isBuffer(buf)) {
+    for (let i = 0; i < bufLen && string.length < reqLen; i++) {
+      const randomByte = buf[i];
+      if (randomByte < maxByte) {
+        // Performance optimization: bracket notation is faster than charAt
+        string += chars[randomByte % charsLen];
+      }
+    }
+  } else {
+    // Fallback for UnsafeBuffer
+    for (let i = 0; i < bufLen && string.length < reqLen; i++) {
+      const randomByte = buf.readUInt8(i);
+      if (randomByte < maxByte) {
+        string += chars[randomByte % charsLen];
+      }
     }
   }
   return string;
