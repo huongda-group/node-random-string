@@ -1,0 +1,3 @@
+## 2024-05-14 - String and Array Micro-optimizations
+**Learning:** In a string generation utility, repeatedly running `[...new Set(arr)].join('')` or dynamic `array.push()` in tight loops introduces significant memory allocation and resizing overhead. Furthermore, `.charAt()` is slightly slower than `[index]` for string character access in tight loops.
+**Action:** Use string bracket notation in tight loops, pre-allocate arrays (`Uint8Array`) when sizes are known, and use simple `for` loop strings over `Set` for deduplication of small character maps. Always include comments when applying optimizations as per Bolt's guidelines.
