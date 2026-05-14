@@ -7,6 +7,15 @@ export type CharsetType =
   | 'octal'
   | (string & {});
 
+// ⚡ Bolt: Use a null-prototype dictionary for O(1) lookups to avoid long if/else chains in getCharacters
+const CHAR_MAPPINGS: Record<string, string> = Object.create(null);
+CHAR_MAPPINGS['alphanumeric'] = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+CHAR_MAPPINGS['numeric'] = '0123456789';
+CHAR_MAPPINGS['alphabetic'] = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+CHAR_MAPPINGS['hex'] = '0123456789abcdef';
+CHAR_MAPPINGS['binary'] = '01';
+CHAR_MAPPINGS['octal'] = '01234567';
+
 export class Charset {
   chars: string;
 
@@ -25,28 +34,7 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
-    }
+    return CHAR_MAPPINGS[type] ?? type;
   }
 
   removeUnreadable(): void {
@@ -63,7 +51,14 @@ export class Charset {
   }
 
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    // ⚡ Bolt: Avoid splitting to array and converting to Set for deduplication to reduce memory allocation overhead
+    let uniqueChars = '';
+    const length = this.chars.length;
+    for (let i = 0; i < length; i++) {
+      if (uniqueChars.indexOf(this.chars[i]) === -1) {
+        uniqueChars += this.chars[i];
+      }
+    }
+    this.chars = uniqueChars;
   }
 }
