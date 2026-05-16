@@ -16,9 +16,9 @@ interface UnsafeBuffer {
 }
 
 function unsafeRandomBytes(length: number): UnsafeBuffer {
-  const stack: number[] = [];
+  const stack = new Uint8Array(length);
   for (let i = 0; i < length; i++) {
-    stack.push(Math.floor(Math.random() * 255));
+    stack[i] = Math.floor(Math.random() * 256);
   }
 
   return {
@@ -46,10 +46,13 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
-  for (let i = 0; i < buf.length && string.length < reqLen; i++) {
+  const bufLen = buf.length;
+  const charsLen = chars.length;
+  for (let i = 0; i < bufLen && string.length < reqLen; i++) {
     const randomByte = buf.readUInt8(i);
     if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+      // Bracket notation for string indexing is faster than charAt in tight loops
+      string += chars[randomByte % charsLen];
     }
   }
   return string;
