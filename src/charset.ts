@@ -63,7 +63,14 @@ export class Charset {
   }
 
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    let uniqueChars = '';
+    const len = this.chars.length;
+    for (let i = 0; i < len; i++) {
+      const char = this.chars[i];
+      if (uniqueChars.indexOf(char) === -1) {
+        uniqueChars += char;
+      }
+    }
+    this.chars = uniqueChars;
   }
 }
