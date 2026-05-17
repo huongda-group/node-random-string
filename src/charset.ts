@@ -7,6 +7,14 @@ export type CharsetType =
   | 'octal'
   | (string & {});
 
+const charsets: Record<string, string> = Object.create(null);
+charsets.numeric = '0123456789';
+charsets.alphabetic = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+charsets.alphanumeric = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+charsets.hex = '0123456789abcdef';
+charsets.binary = '01';
+charsets.octal = '01234567';
+
 export class Charset {
   chars: string;
 
@@ -25,28 +33,10 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
+    if (typeof type === 'string' && charsets[type]) {
+      return charsets[type];
     }
+    return type as string;
   }
 
   removeUnreadable(): void {
@@ -63,7 +53,14 @@ export class Charset {
   }
 
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    const charsLen = this.chars.length;
+    let newChars = '';
+    for (let i = 0; i < charsLen; i++) {
+      const char = this.chars[i];
+      if (newChars.indexOf(char) === -1) {
+        newChars += char;
+      }
+    }
+    this.chars = newChars;
   }
 }
