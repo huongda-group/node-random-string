@@ -7,6 +7,20 @@ export type CharsetType =
   | 'octal'
   | (string & {});
 
+const NUMBERS = '0123456789';
+const CHARS_LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const CHARS_UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+const CHARSET_MAP = Object.create(null);
+CHARSET_MAP['alphanumeric'] = NUMBERS + CHARS_LOWER + CHARS_UPPER;
+CHARSET_MAP['numeric'] = NUMBERS;
+CHARSET_MAP['alphabetic'] = CHARS_LOWER + CHARS_UPPER;
+CHARSET_MAP['hex'] = NUMBERS + 'abcdef';
+CHARSET_MAP['binary'] = '01';
+CHARSET_MAP['octal'] = '01234567';
+
+const UNREADABLE_REGEX = /[0OIl]/g;
+
 export class Charset {
   chars: string;
 
@@ -25,33 +39,11 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
-    }
+    return CHARSET_MAP[type] || type;
   }
 
   removeUnreadable(): void {
-    const unreadableChars = /[0OIl]/g;
-    this.chars = this.chars.replace(unreadableChars, '');
+    this.chars = this.chars.replace(UNREADABLE_REGEX, '');
   }
 
   setcapitalization(capitalization: string): void {
@@ -63,7 +55,13 @@ export class Charset {
   }
 
   removeDuplicates(): void {
-    const charMap = this.chars.split('');
-    this.chars = [...new Set(charMap)].join('');
+    let result = '';
+    const charsLen = this.chars.length;
+    for (let i = 0; i < charsLen; i++) {
+      if (result.indexOf(this.chars[i]) === -1) {
+        result += this.chars[i];
+      }
+    }
+    this.chars = result;
   }
 }
