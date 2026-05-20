@@ -7,6 +7,18 @@ export type CharsetType =
   | 'octal'
   | (string & {});
 
+const numbers = '0123456789';
+const charsLower = 'abcdefghijklmnopqrstuvwxyz';
+const charsUpper = charsLower.toUpperCase();
+
+const charsets: Record<string, string> = Object.create(null);
+charsets.alphanumeric = numbers + charsLower + charsUpper;
+charsets.numeric = numbers;
+charsets.alphabetic = charsLower + charsUpper;
+charsets.hex = numbers + 'abcdef';
+charsets.binary = '01';
+charsets.octal = '01234567';
+
 export class Charset {
   chars: string;
 
@@ -25,25 +37,8 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
+    if (charsets[type]) {
+      return charsets[type];
     } else {
       return type;
     }
