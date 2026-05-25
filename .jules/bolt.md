@@ -1,0 +1,3 @@
+## 2024-05-24 - V8 String Indexing and Array Pre-allocation
+**Learning:** In tight random string generation loops, caching buffer/string lengths and using bracket notation (`chars[index]`) instead of `.charAt()` avoids minor V8 overhead. Dynamically pushing to a standard array for bytes is far more expensive than pre-allocating a `Uint8Array`. Additionally, defining constant strings at the module scope prevents repeated string allocations when instantiating utility classes.
+**Action:** Always pre-allocate typed arrays for byte buffers and move constant string definitions outside of frequently invoked methods or class constructors to eliminate unnecessary garbage collection overhead in hot paths.
