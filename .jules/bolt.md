@@ -1,0 +1,3 @@
+## 2024-05-24 - Optimization: Memory Allocation and V8 String Lookup Avoidance in Random String Generation
+**Learning:** In hot loops for string generation, `String.prototype.charAt()` has measurable overhead compared to simple bracket notation `string[index]` due to V8 method call indirection. Furthermore, extracting hardcoded default charsets out of class instantiation and pre-allocating byte arrays (`new Array(length)`) instead of dynamically pushing to `[]` avoids garbage collection and array resizing overhead.
+**Action:** When handling hot paths involving tight loops across strings and arrays, favor bracket notation, pre-allocate arrays when length is known, and always lift constant primitive assignments out of class methods/constructors.
