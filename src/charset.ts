@@ -1,3 +1,10 @@
+const NUMBERS = '0123456789';
+const CHARS_LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const CHARS_UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const HEX_CHARS = 'abcdef';
+const BINARY_CHARS = '01';
+const OCTAL_CHARS = '01234567';
+
 export type CharsetType =
   | 'alphanumeric'
   | 'numeric'
@@ -25,27 +32,14 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
+    switch (type) {
+      case 'alphanumeric': return NUMBERS + CHARS_LOWER + CHARS_UPPER;
+      case 'numeric': return NUMBERS;
+      case 'alphabetic': return CHARS_LOWER + CHARS_UPPER;
+      case 'hex': return NUMBERS + HEX_CHARS;
+      case 'binary': return BINARY_CHARS;
+      case 'octal': return OCTAL_CHARS;
+      default: return type;
     }
   }
 
