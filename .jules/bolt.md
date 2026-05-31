@@ -1,0 +1,3 @@
+## 2024-05-31 - [Extract Static String Allocations in High-Frequency Random Methods]
+**Learning:** In V8, standard object-level property lookups and method returns mappings mapped across long switch cases/if-else ladders dynamically evaluate new string primitives every time `getCharacters()` is hit in loops, which costs milliseconds inside highly repetitious generator functions.
+**Action:** Lift standard mappings directly into global const bindings outside standard logic wrappers unless strictly necessary to be object properties. This optimizes constant-time memory overhead out of initialization loops for tight string builders.

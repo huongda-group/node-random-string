@@ -7,6 +7,20 @@ export type CharsetType =
   | 'octal'
   | (string & {});
 
+// ⚡ Bolt Performance Optimization:
+// Standardizing globally scoped mapping constants out of dynamic initialization loops
+// to prevent V8 from re-allocating new String objects continuously on tight mappings.
+const NUMBERS = '0123456789';
+const CHARS_LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const CHARS_UPPER = CHARS_LOWER.toUpperCase();
+const HEX_CHARS = 'abcdef';
+const BINARY_CHARS = '01';
+const OCTAL_CHARS = '01234567';
+
+const ALPHANUMERIC = NUMBERS + CHARS_LOWER + CHARS_UPPER;
+const ALPHABETIC = CHARS_LOWER + CHARS_UPPER;
+const HEX = NUMBERS + HEX_CHARS;
+
 export class Charset {
   chars: string;
 
@@ -25,27 +39,21 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
+    switch (type) {
+      case 'alphanumeric':
+        return ALPHANUMERIC;
+      case 'numeric':
+        return NUMBERS;
+      case 'alphabetic':
+        return ALPHABETIC;
+      case 'hex':
+        return HEX;
+      case 'binary':
+        return BINARY_CHARS;
+      case 'octal':
+        return OCTAL_CHARS;
+      default:
+        return type;
     }
   }
 
