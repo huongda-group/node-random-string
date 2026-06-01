@@ -1,0 +1,3 @@
+## 2025-02-28 - Optimize String Generation Loops and Allocations
+**Learning:** In tight loops involving random string generation, dynamic string length access and `.charAt()` method calls add measurable overhead compared to direct bracket notation (`[]`) with a cached length. Also, pushing dynamically to standard JavaScript arrays `[]` adds array resizing allocation overhead compared to pre-allocated arrays like `Uint8Array`.
+**Action:** When working in hot paths like the core random string generation loops, cache buffer/string lengths locally, use direct bracket notation for element access (`buf[i]` and `chars[i]`), and pre-allocate fixed-length structures like `Uint8Array` rather than dynamically sizing standard arrays for raw byte generation.
