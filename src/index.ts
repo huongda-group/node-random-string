@@ -16,9 +16,10 @@ interface UnsafeBuffer {
 }
 
 function unsafeRandomBytes(length: number): UnsafeBuffer {
-  const stack: number[] = [];
+  // Pre-allocate array to avoid dynamic allocation overhead
+  const stack = new Array(length);
   for (let i = 0; i < length; i++) {
-    stack.push(Math.floor(Math.random() * 255));
+    stack[i] = Math.floor(Math.random() * 255);
   }
 
   return {
@@ -46,10 +47,24 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
-  for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
-    if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+  const charsLen = chars.length;
+  const bufLen = buf.length;
+
+  // Fast path for native Buffer/Uint8Array: direct indexed access (buf[i]) is significantly faster
+  // than method calls (buf.readUInt8). Bracket access on strings is also faster than charAt.
+  if (typeof (buf as any)[0] === 'number') {
+    for (let i = 0; i < bufLen && string.length < reqLen; i++) {
+      const randomByte = (buf as any)[i];
+      if (randomByte < maxByte) {
+        string += chars[randomByte % charsLen];
+      }
+    }
+  } else {
+    for (let i = 0; i < bufLen && string.length < reqLen; i++) {
+      const randomByte = buf.readUInt8(i);
+      if (randomByte < maxByte) {
+        string += chars[randomByte % charsLen];
+      }
     }
   }
   return string;
