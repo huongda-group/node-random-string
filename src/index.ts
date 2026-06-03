@@ -10,26 +10,16 @@ export interface GenerateOptions {
 
 type GenerateCallback = (err: Error | null, result?: string) => void;
 
-interface UnsafeBuffer {
-  length: number;
-  readUInt8(index: number): number;
-}
-
-function unsafeRandomBytes(length: number): UnsafeBuffer {
-  const stack: number[] = [];
+function unsafeRandomBytes(length: number): Uint8Array {
+  const buf = new Uint8Array(length);
   for (let i = 0; i < length; i++) {
-    stack.push(Math.floor(Math.random() * 255));
+    buf[i] = Math.floor(Math.random() * 255);
   }
 
-  return {
-    length,
-    readUInt8(index: number) {
-      return stack[index];
-    },
-  };
+  return buf;
 }
 
-function safeRandomBytes(length: number): Buffer | UnsafeBuffer {
+function safeRandomBytes(length: number): Buffer | Uint8Array {
   try {
     return randomBytes(length);
   } catch (e) {
@@ -39,17 +29,18 @@ function safeRandomBytes(length: number): Buffer | UnsafeBuffer {
 }
 
 function processString(
-  buf: Buffer | UnsafeBuffer,
+  buf: Buffer | Uint8Array,
   initialString: string,
   chars: string,
   reqLen: number,
   maxByte: number,
 ): string {
   let string = initialString;
+  const charsLen = chars.length; // ⚡ Bolt: Cache property lookup
   for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
+    const randomByte = buf[i]; // ⚡ Bolt: Direct index access is faster than readUInt8
     if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+      string += chars[randomByte % charsLen]; // ⚡ Bolt: Bracket access is faster than charAt
     }
   }
   return string;
