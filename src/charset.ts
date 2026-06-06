@@ -7,6 +7,25 @@ export type CharsetType =
   | 'octal'
   | (string & {});
 
+const CONSTANTS = {
+  numbers: '0123456789',
+  charsLower: 'abcdefghijklmnopqrstuvwxyz',
+  charsUpper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  hexChars: 'abcdef',
+  binaryChars: '01',
+  octalChars: '01234567',
+};
+
+// Cache the predefined charsets to prevent repeated dynamic string concatenation allocations on every generate call
+const PREDEFINED_CHARSETS: Record<string, string> = Object.assign(Object.create(null), {
+  alphanumeric: CONSTANTS.numbers + CONSTANTS.charsLower + CONSTANTS.charsUpper,
+  numeric: CONSTANTS.numbers,
+  alphabetic: CONSTANTS.charsLower + CONSTANTS.charsUpper,
+  hex: CONSTANTS.numbers + CONSTANTS.hexChars,
+  binary: CONSTANTS.binaryChars,
+  octal: CONSTANTS.octalChars,
+});
+
 export class Charset {
   chars: string;
 
@@ -25,28 +44,10 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
+    if (typeof type === 'string' && PREDEFINED_CHARSETS[type]) {
+      return PREDEFINED_CHARSETS[type];
     }
+    return type;
   }
 
   removeUnreadable(): void {

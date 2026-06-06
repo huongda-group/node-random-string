@@ -10,23 +10,20 @@ export interface GenerateOptions {
 
 type GenerateCallback = (err: Error | null, result?: string) => void;
 
+// Fallback type for random buffer array-like structures
 interface UnsafeBuffer {
   length: number;
-  readUInt8(index: number): number;
+  [index: number]: number;
 }
 
 function unsafeRandomBytes(length: number): UnsafeBuffer {
-  const stack: number[] = [];
+  // Pre-allocate Uint8Array instead of dynamically pushing to standard array to avoid resizing overhead
+  const stack = new Uint8Array(length);
   for (let i = 0; i < length; i++) {
-    stack.push(Math.floor(Math.random() * 255));
+    stack[i] = Math.floor(Math.random() * 255);
   }
 
-  return {
-    length,
-    readUInt8(index: number) {
-      return stack[index];
-    },
-  };
+  return stack;
 }
 
 function safeRandomBytes(length: number): Buffer | UnsafeBuffer {
@@ -46,10 +43,14 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
+  const charsLen = chars.length;
+
   for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
+    // Direct index access is significantly faster in tight V8 loops and supported natively by both Buffer and Uint8Array.
+    const randomByte = buf[i];
     if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+      // Use bracket notation instead of charAt for better performance in tight loops
+      string += chars[randomByte % charsLen];
     }
   }
   return string;
