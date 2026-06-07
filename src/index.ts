@@ -10,23 +10,15 @@ export interface GenerateOptions {
 
 type GenerateCallback = (err: Error | null, result?: string) => void;
 
-interface UnsafeBuffer {
-  length: number;
-  readUInt8(index: number): number;
-}
+type UnsafeBuffer = Uint8Array | number[];
 
 function unsafeRandomBytes(length: number): UnsafeBuffer {
-  const stack: number[] = [];
+  const stack = typeof Uint8Array !== 'undefined' ? new Uint8Array(length) : new Array(length);
   for (let i = 0; i < length; i++) {
-    stack.push(Math.floor(Math.random() * 255));
+    stack[i] = Math.floor(Math.random() * 256);
   }
 
-  return {
-    length,
-    readUInt8(index: number) {
-      return stack[index];
-    },
-  };
+  return stack;
 }
 
 function safeRandomBytes(length: number): Buffer | UnsafeBuffer {
@@ -46,10 +38,11 @@ function processString(
   maxByte: number,
 ): string {
   let string = initialString;
+  const charsLen = chars.length;
   for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
+    const randomByte = buf[i];
     if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+      string += chars[randomByte % charsLen];
     }
   }
   return string;
