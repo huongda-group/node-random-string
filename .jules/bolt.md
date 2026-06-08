@@ -1,0 +1,3 @@
+## 2024-05-18 - String Generation Micro-Optimizations
+**Learning:** In tight Node.js loops involving string generation and `Buffer` access, using direct array indexing (`buf[i]`) on `Buffer`/`Uint8Array` is much faster than method calls like `.readUInt8()`. Similarly, accessing characters with `chars[index]` is faster than `chars.charAt()`. Pre-allocating typed arrays (`new Uint8Array(length)`) avoids the significant allocation overhead of pushing to standard JS arrays dynamically.
+**Action:** Always prefer direct array indexing and pre-allocated arrays (`Uint8Array`) in performance-critical hot paths over higher-level method calls and dynamic standard arrays. Lift fixed string constants out of functions to avoid repeated instantiation.
