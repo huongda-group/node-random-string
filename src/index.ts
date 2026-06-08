@@ -10,26 +10,15 @@ export interface GenerateOptions {
 
 type GenerateCallback = (err: Error | null, result?: string) => void;
 
-interface UnsafeBuffer {
-  length: number;
-  readUInt8(index: number): number;
-}
-
-function unsafeRandomBytes(length: number): UnsafeBuffer {
-  const stack: number[] = [];
+function unsafeRandomBytes(length: number): Uint8Array {
+  const result = new Uint8Array(length);
   for (let i = 0; i < length; i++) {
-    stack.push(Math.floor(Math.random() * 255));
+    result[i] = Math.floor(Math.random() * 256);
   }
-
-  return {
-    length,
-    readUInt8(index: number) {
-      return stack[index];
-    },
-  };
+  return result;
 }
 
-function safeRandomBytes(length: number): Buffer | UnsafeBuffer {
+function safeRandomBytes(length: number): Buffer | Uint8Array {
   try {
     return randomBytes(length);
   } catch (e) {
@@ -39,17 +28,19 @@ function safeRandomBytes(length: number): Buffer | UnsafeBuffer {
 }
 
 function processString(
-  buf: Buffer | UnsafeBuffer,
+  buf: Buffer | Uint8Array,
   initialString: string,
   chars: string,
   reqLen: number,
   maxByte: number,
 ): string {
   let string = initialString;
-  for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
+  const charsLen = chars.length;
+  const bufLen = buf.length;
+  for (let i = 0; i < bufLen && string.length < reqLen; i++) {
+    const randomByte = buf[i];
     if (randomByte < maxByte) {
-      string += chars.charAt(randomByte % chars.length);
+      string += chars[randomByte % charsLen];
     }
   }
   return string;
