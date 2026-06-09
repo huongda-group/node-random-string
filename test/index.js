@@ -151,6 +151,16 @@ describe("randomstring(options)", function() {
     doTest();
   });
 
+  it("handles lengths requiring more than one Web Crypto chunk (>65536 bytes)", function() {
+    // maxByte for alphanumeric (62 chars) -> buf size = ceil(len*256/maxByte).
+    // len 70000 forces a buffer well past getRandomValues' 65536-byte cap,
+    // exercising the chunked-fill path in safeRandomBytes.
+    var len = 70000;
+    var s = random({ length: len });
+    assert.equal(s.length, len);
+    assert.equal(s.search(/[^0-9a-zA-Z]/), -1);
+  });
+
   it("returns unbiased strings", function() {
     var charset = 'abcdefghijklmnopqrstuvwxyz';
     var slen = 100000;

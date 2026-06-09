@@ -1,6 +1,6 @@
 {
   "name": "@huongda-group/random-string",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "author": "Nelie Taylor <nghi@huongda.com> (https://n96.dev)",
   "description": "A module for generating random strings",
   "homepage": "https://github.com/huongda-group/node-random-string",
@@ -10,9 +10,12 @@
   },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
+  "browser": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
+      "browser": "./dist/index.mjs",
       "import": {
         "types": "./dist/index.d.mts",
         "default": "./dist/index.mjs"
@@ -30,9 +33,6 @@
     "dist",
     "bin"
   ],
-  "dependencies": {
-    "randombytes": "2.1.0"
-  },
   "devDependencies": {
     "@types/node": "^25.2.3",
     "mocha": "^11.7.5",

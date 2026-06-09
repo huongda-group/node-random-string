@@ -1,4 +1,3 @@
-import randomBytes from 'randombytes';
 import { Charset, CharsetType } from './charset';
 
 export interface GenerateOptions {
@@ -10,36 +9,40 @@ export interface GenerateOptions {
 
 type GenerateCallback = (err: Error | null, result?: string) => void;
 
-interface UnsafeBuffer {
-  length: number;
-  readUInt8(index: number): number;
-}
+// Resolve the Web Crypto implementation in both browsers and Node (>=18 exposes
+// globalThis.crypto; older Node exposes it via the `crypto` module's webcrypto).
+const webcrypto: Crypto | undefined =
+  typeof globalThis !== 'undefined' &&
+  typeof (globalThis as { crypto?: Crypto }).crypto?.getRandomValues === 'function'
+    ? (globalThis as { crypto: Crypto }).crypto
+    : undefined;
 
-function unsafeRandomBytes(length: number): UnsafeBuffer {
-  const stack: number[] = [];
+function unsafeRandomBytes(length: number): Uint8Array {
+  // Math.random() fallback for environments without Web Crypto (legacy React Native).
+  const bytes = new Uint8Array(length);
   for (let i = 0; i < length; i++) {
-    stack.push(Math.floor(Math.random() * 255));
+    bytes[i] = Math.floor(Math.random() * 256);
   }
-
-  return {
-    length,
-    readUInt8(index: number) {
-      return stack[index];
-    },
-  };
+  return bytes;
 }
 
-function safeRandomBytes(length: number): Buffer | UnsafeBuffer {
-  try {
-    return randomBytes(length);
-  } catch (e) {
-    /* React/React Native Fix + Eternal loop removed */
-    return unsafeRandomBytes(length);
+// getRandomValues rejects requests over 65536 bytes, so fill in chunks.
+const MAX_BYTES_PER_CALL = 65536;
+
+function safeRandomBytes(length: number): Uint8Array {
+  if (webcrypto) {
+    const bytes = new Uint8Array(length);
+    for (let offset = 0; offset < length; offset += MAX_BYTES_PER_CALL) {
+      const chunk = Math.min(MAX_BYTES_PER_CALL, length - offset);
+      webcrypto.getRandomValues(bytes.subarray(offset, offset + chunk));
+    }
+    return bytes;
   }
+  return unsafeRandomBytes(length);
 }
 
 function processString(
-  buf: Buffer | UnsafeBuffer,
+  buf: Uint8Array,
   initialString: string,
   chars: string,
   reqLen: number,
@@ -47,34 +50,12 @@ function processString(
 ): string {
   let string = initialString;
   for (let i = 0; i < buf.length && string.length < reqLen; i++) {
-    const randomByte = buf.readUInt8(i);
+    const randomByte = buf[i];
     if (randomByte < maxByte) {
       string += chars.charAt(randomByte % chars.length);
     }
   }
   return string;
-}
-
-function getAsyncString(
-  string: string,
-  chars: string,
-  length: number,
-  maxByte: number,
-  cb: GenerateCallback,
-): void {
-  randomBytes(length, function (err: Error | null, buf: Buffer) {
-    if (err) {
-      // Since it is waiting for entropy, errors are legit and we shouldn't just keep retrying
-      cb(err);
-      return;
-    }
-    const generatedString = processString(buf, string, chars, length, maxByte);
-    if (generatedString.length < length) {
-      getAsyncString(generatedString, chars, length, maxByte, cb);
-    } else {
-      cb(null, generatedString);
-    }
-  });
 }
 
 function generate(options: GenerateOptions | number | null | undefined, cb: GenerateCallback): void;
@@ -116,16 +97,25 @@ function generate(options?: GenerateOptions | number | null, cb?: GenerateCallba
   const charsLen = charset.chars.length;
   const maxByte = 256 - (256 % charsLen);
 
-  if (!cb) {
-    while (string.length < length) {
+  const build = (): string => {
+    let result = '';
+    while (result.length < length) {
       const buf = safeRandomBytes(Math.ceil((length * 256) / maxByte));
-      string = processString(buf, string, charset.chars, length, maxByte);
+      result = processString(buf, result, charset.chars, length, maxByte);
     }
+    return result;
+  };
 
-    return string;
+  if (!cb) {
+    return build();
   }
 
-  getAsyncString(string, charset.chars, length, maxByte, cb);
+  // Web Crypto's getRandomValues is synchronous; preserve the async callback API.
+  try {
+    cb(null, build());
+  } catch (err) {
+    cb(err instanceof Error ? err : new Error(String(err)));
+  }
 }
 
 export default generate;
