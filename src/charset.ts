@@ -7,6 +7,18 @@ export type CharsetType =
   | 'octal'
   | (string & {});
 
+const NUMBERS = '0123456789';
+const CHARS_LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const CHARS_UPPER = CHARS_LOWER.toUpperCase();
+const HEX_CHARS = 'abcdef';
+const BINARY_CHARS = '01';
+const OCTAL_CHARS = '01234567';
+
+// Pre-compute common combinations
+const ALPHANUMERIC_CHARS = NUMBERS + CHARS_LOWER + CHARS_UPPER;
+const ALPHABETIC_CHARS = CHARS_LOWER + CHARS_UPPER;
+const HEX_FULL_CHARS = NUMBERS + HEX_CHARS;
+
 export class Charset {
   chars: string;
 
@@ -25,28 +37,13 @@ export class Charset {
   }
 
   getCharacters(type: CharsetType): string {
-    const numbers = '0123456789';
-    const charsLower = 'abcdefghijklmnopqrstuvwxyz';
-    const charsUpper = charsLower.toUpperCase();
-    const hexChars = 'abcdef';
-    const binaryChars = '01';
-    const octalChars = '01234567';
-
-    if (type === 'alphanumeric') {
-      return numbers + charsLower + charsUpper;
-    } else if (type === 'numeric') {
-      return numbers;
-    } else if (type === 'alphabetic') {
-      return charsLower + charsUpper;
-    } else if (type === 'hex') {
-      return numbers + hexChars;
-    } else if (type === 'binary') {
-      return binaryChars;
-    } else if (type === 'octal') {
-      return octalChars;
-    } else {
-      return type;
-    }
+    if (type === 'alphanumeric') return ALPHANUMERIC_CHARS;
+    if (type === 'numeric') return NUMBERS;
+    if (type === 'alphabetic') return ALPHABETIC_CHARS;
+    if (type === 'hex') return HEX_FULL_CHARS;
+    if (type === 'binary') return BINARY_CHARS;
+    if (type === 'octal') return OCTAL_CHARS;
+    return type;
   }
 
   removeUnreadable(): void {
