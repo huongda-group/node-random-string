@@ -1,0 +1,3 @@
+## 2024-05-24 - Optimizing String Deduplication and Generation
+**Learning:** In hot paths, avoiding object allocations like `.split('')` and `[...new Set()]` for string deduplication can yield significant performance gains (~46%). Using a simple string builder with `.indexOf()` is much faster for short character sets. Also, avoiding dynamic string concatenation in getter functions (like `getCharacters`) by pre-computing static strings provides a significant boost (~60% speedup).
+**Action:** Default to static hardcoded strings for known sets in lookup functions instead of concatenating them dynamically. Use `.indexOf()` with a `for` loop instead of `Set`s for deduplicating strings if the string length is relatively small.
